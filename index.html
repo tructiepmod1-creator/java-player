@@ -1,71 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Java Player - Pro Version</title>
+    <title>Java Player - Fixed</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://cdn.jsdelivr.net/gh/vneof/j2me-emulator@main/dist/j2me.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/tuananhpro/j2me-emulator@main/dist/j2me.js"></script>
     <style>
-        body { margin: 0; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; color: #fff; font-family: sans-serif; }
-        #screen { width: 240px; height: 320px; border: 5px solid #333; background: #000; position: relative; border-radius: 10px; box-shadow: 0 0 25px rgba(0,255,0,0.3); }
-        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 85%; z-index: 100; }
-        .bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; margin-top: 10px; border: 1px solid #444; overflow: hidden; }
-        #bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ff00, #00cc00); transition: width 0.3s; }
-        #status { font-size: 11px; font-family: monospace; color: #00ff00; text-transform: uppercase; }
-        
-        /* Bộ phím ảo để chơi được trên Mobile */
-        .controls { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .btn { background: #333; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; user-select: none; }
-        .btn:active { background: #555; transform: scale(0.95); }
+        body { margin: 0; background: #000; color: #0f0; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        #screen { width: 240px; height: 320px; border: 3px solid #333; background: #111; position: relative; border-radius: 8px; }
+        #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 90%; }
+        .progress-container { width: 100%; height: 10px; background: #222; border-radius: 5px; margin-top: 10px; border: 1px solid #444; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #0f0; transition: width 0.2s; }
     </style>
 </head>
 <body>
     <div id="screen">
-        <div id="loading">
-            <div id="status">BẮT ĐẦU HỆ THỐNG...</div>
-            <div class="bar-bg"><div id="bar"></div></div>
+        <div id="loader">
+            <div id="msg">SYSTEM INITIALIZING...</div>
+            <div class="progress-container"><div id="progress-bar"></div></div>
         </div>
-    </div>
-
-    <div class="controls">
-        <div class="btn" onclick="press(38)">UP</div>
-        <div class="btn" onclick="press(13)">OK</div>
-        <div class="btn" onclick="press(40)">DN</div>
     </div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
         const jarUrl = params.get('jar');
-        
-        // Hàm giả lập nhấn phím
-        function press(key) { /* Code xử lý phím sẽ được J2me.js tự nhận diện */ }
 
         if (jarUrl) {
+            // Sử dụng Proxy để vượt lỗi chặn nạp file (CORS)
+            const proxyJar = "https://api.allorigins.win/raw?url=" + encodeURIComponent(jarUrl);
+            
             const config = {
-                onProgress: (p) => { 
-                    document.getElementById('bar').style.width = (p * 100) + "%"; 
-                    document.getElementById('status').innerText = "ĐANG TẢI: " + Math.round(p * 100) + "%";
+                onProgress: (p) => {
+                    document.getElementById('progress-bar').style.width = (p * 100) + "%";
+                    document.getElementById('msg').innerText = "LOADING: " + Math.round(p * 100) + "%";
                 },
-                onReady: () => { 
-                    document.getElementById('loading').style.display = 'none'; 
+                onReady: () => {
+                    document.getElementById('loader').style.display = 'none';
                 }
             };
 
             try {
                 const emu = new J2ME(document.getElementById('screen'), config);
-                // Sử dụng Proxy để tránh lỗi CORS (Lỗi khiến thanh % không chạy)
-                const finalUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(jarUrl);
-                
-                emu.loadJar(finalUrl).then(() => {
+                emu.loadJar(proxyJar).then(() => {
                     emu.start();
                 }).catch(err => {
-                    document.getElementById('status').innerText = "LỖI NẠP FILE JAR!";
-                    document.getElementById('status').style.color = "red";
+                    document.getElementById('msg').innerText = "FAILED TO FETCH JAR!";
+                    document.getElementById('msg').style.color = "red";
                 });
             } catch (e) {
-                document.getElementById('status').innerText = "KHÔNG KHỞI TẠO ĐƯỢC MÁY ẢO!";
+                document.getElementById('msg').innerText = "EMULATOR ERROR!";
             }
         } else {
-            document.getElementById('status').innerText = "THIẾU ĐƯỜNG DẪN GAME!";
+            document.getElementById('msg').innerText = "NO JAR LINK PROVIDED!";
         }
     </script>
 </body>
