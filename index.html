@@ -7,16 +7,16 @@
     <script src="https://cdn.jsdelivr.net/gh/tuananhpro/j2me-emulator@main/dist/j2me.js"></script>
     <style>
         body { margin: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; color: #0f0; font-family: monospace; }
-        #screen { width: 240px; height: 320px; border: 3px solid #333; background: #111; position: relative; }
-        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 80%; }
-        .bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; margin-top: 10px; overflow: hidden; border: 1px solid #444; }
+        #screen { width: 240px; height: 320px; border: 3px solid #333; background: #111; position: relative; border-radius: 8px; }
+        #loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .bar-bg { width: 160px; height: 8px; background: #222; border-radius: 4px; margin-top: 10px; border: 1px solid #444; overflow: hidden; }
         #bar { width: 0%; height: 100%; background: #0f0; transition: width 0.2s; }
     </style>
 </head>
 <body>
     <div id="screen">
         <div id="loading">
-            <div id="status">ĐANG TẢI...</div>
+            <div id="status">ĐANG KHỞI TẠO...</div>
             <div class="bar-bg"><div id="bar"></div></div>
         </div>
     </div>
@@ -27,19 +27,28 @@
 
         if (jarUrl) {
             const config = {
-                onProgress: (p) => { document.getElementById('bar').style.width = (p * 100) + "%"; },
+                // Chỉ định rõ nơi lấy file Worker để tránh lỗi "Emulator Error"
+                workerPath: "https://cdn.jsdelivr.net/gh/tuananhpro/j2me-emulator@main/dist/worker.js",
+                onProgress: (p) => { 
+                    const pct = Math.round(p * 100);
+                    document.getElementById('bar').style.width = pct + "%"; 
+                    document.getElementById('status').innerText = "ĐANG TẢI: " + pct + "%";
+                },
                 onReady: () => { document.getElementById('loading').style.display = 'none'; }
             };
 
-            const emu = new J2ME(document.getElementById('screen'), config);
-            
-            // QUAN TRỌNG: Nạp trực tiếp jarUrl (không dùng proxy google/allorigins)
-            emu.loadJar(jarUrl).then(() => {
-                emu.start();
-            }).catch(e => {
-                document.getElementById('status').innerText = "KHÔNG TÌM THẤY FILE!";
-                document.getElementById('status').style.color = "red";
-            });
+            try {
+                const emu = new J2ME(document.getElementById('screen'), config);
+                // Nạp file JAR từ thư mục nội bộ games/
+                emu.loadJar(jarUrl).then(() => {
+                    emu.start();
+                }).catch(e => {
+                    document.getElementById('status').innerText = "LỖI NẠP FILE JAR!";
+                    document.getElementById('status').style.color = "red";
+                });
+            } catch (err) {
+                document.getElementById('status').innerText = "MÁY ẢO KHÔNG HỖ TRỢ!";
+            }
         }
     </script>
 </body>
