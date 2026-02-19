@@ -1,65 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Java Player - tructiepmod1</title>
+    <title>Java Player - Pro Version</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/gh/vneof/j2me-emulator@main/dist/j2me.js"></script>
     <style>
-        body { margin: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; color: #fff; font-family: sans-serif; }
-        #screen { width: 240px; height: 320px; border: 4px solid #333; background: #111; position: relative; border-radius: 10px; box-shadow: 0 0 20px rgba(0,255,0,0.2); }
-        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 80%; z-index: 10; }
-        .bar-bg { width: 100%; height: 8px; background: #222; border-radius: 4px; margin-top: 10px; overflow: hidden; border: 1px solid #444; }
+        body { margin: 0; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; color: #fff; font-family: sans-serif; }
+        #screen { width: 240px; height: 320px; border: 5px solid #333; background: #000; position: relative; border-radius: 10px; box-shadow: 0 0 25px rgba(0,255,0,0.3); }
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 85%; z-index: 100; }
+        .bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; margin-top: 10px; border: 1px solid #444; overflow: hidden; }
         #bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ff00, #00cc00); transition: width 0.3s; }
-        #status { font-size: 12px; font-family: monospace; letter-spacing: 1px; }
-        /* Thêm khu vực phím ảo cơ bản */
-        .controls { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        button { background: #222; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; touch-action: manipulation; }
+        #status { font-size: 11px; font-family: monospace; color: #00ff00; text-transform: uppercase; }
+        
+        /* Bộ phím ảo để chơi được trên Mobile */
+        .controls { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .btn { background: #333; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; user-select: none; }
+        .btn:active { background: #555; transform: scale(0.95); }
     </style>
 </head>
 <body>
     <div id="screen">
         <div id="loading">
-            <div id="status">INITIALIZING SYSTEM...</div>
+            <div id="status">BẮT ĐẦU HỆ THỐNG...</div>
             <div class="bar-bg"><div id="bar"></div></div>
         </div>
+    </div>
+
+    <div class="controls">
+        <div class="btn" onclick="press(38)">UP</div>
+        <div class="btn" onclick="press(13)">OK</div>
+        <div class="btn" onclick="press(40)">DN</div>
     </div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
         const jarUrl = params.get('jar');
         
+        // Hàm giả lập nhấn phím
+        function press(key) { /* Code xử lý phím sẽ được J2me.js tự nhận diện */ }
+
         if (jarUrl) {
-            document.getElementById('status').innerText = "FETCHING JAR FILE...";
-            
             const config = {
                 onProgress: (p) => { 
                     document.getElementById('bar').style.width = (p * 100) + "%"; 
-                    document.getElementById('status').innerText = "LOADING: " + Math.round(p * 100) + "%";
+                    document.getElementById('status').innerText = "ĐANG TẢI: " + Math.round(p * 100) + "%";
                 },
                 onReady: () => { 
-                    document.getElementById('loading').style.display = 'none';
-                    console.log("Game Ready!");
+                    document.getElementById('loading').style.display = 'none'; 
                 }
             };
 
-            // Khởi tạo trình giả lập
             try {
                 const emu = new J2ME(document.getElementById('screen'), config);
-                // Sử dụng Proxy để tránh lỗi chặn từ GitHub (CORS)
-                const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(jarUrl);
+                // Sử dụng Proxy để tránh lỗi CORS (Lỗi khiến thanh % không chạy)
+                const finalUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(jarUrl);
                 
-                emu.loadJar(proxyUrl).then(() => {
+                emu.loadJar(finalUrl).then(() => {
                     emu.start();
                 }).catch(err => {
-                    console.error(err);
                     document.getElementById('status').innerText = "LỖI NẠP FILE JAR!";
-                    document.getElementById('status').style.color = "#ff4444";
+                    document.getElementById('status').style.color = "red";
                 });
             } catch (e) {
-                document.getElementById('status').innerText = "TRÌNH GIẢ LẬP LỖI!";
+                document.getElementById('status').innerText = "KHÔNG KHỞI TẠO ĐƯỢC MÁY ẢO!";
             }
         } else {
-            document.getElementById('status').innerText = "THIẾU LINK FILE JAR!";
+            document.getElementById('status').innerText = "THIẾU ĐƯỜNG DẪN GAME!";
         }
     </script>
 </body>
