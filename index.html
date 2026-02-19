@@ -7,47 +7,49 @@
     <script src="https://cdn.jsdelivr.net/gh/tuananhpro/j2me-emulator@main/dist/j2me.js"></script>
     <style>
         body { margin: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; color: #0f0; font-family: monospace; }
-        #screen { width: 240px; height: 320px; border: 3px solid #333; background: #111; position: relative; border-radius: 8px; }
+        #screen { width: 240px; height: 320px; border: 3px solid #333; background: #111; position: relative; border-radius: 8px; box-shadow: 0 0 15px rgba(0,255,0,0.1); }
         #loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
         .bar-bg { width: 160px; height: 8px; background: #222; border-radius: 4px; margin-top: 10px; border: 1px solid #444; overflow: hidden; }
-        #bar { width: 0%; height: 100%; background: #0f0; transition: width 0.2s; }
+        #bar { width: 0%; height: 100%; background: #0f0; transition: width 0.3s; }
     </style>
 </head>
 <body>
     <div id="screen">
         <div id="loading">
-            <div id="status">ĐANG KHỞI TẠO...</div>
+            <div id="status">INITIALIZING...</div>
             <div class="bar-bg"><div id="bar"></div></div>
         </div>
     </div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const jarUrl = params.get('jar');
+        let jarUrl = params.get('jar');
 
         if (jarUrl) {
             const config = {
-                // Chỉ định rõ nơi lấy file Worker để tránh lỗi "Emulator Error"
+                // ĐỊNH VỊ WORKER: Đây là dòng quan trọng nhất để sửa lỗi "Máy ảo không hỗ trợ"
                 workerPath: "https://cdn.jsdelivr.net/gh/tuananhpro/j2me-emulator@main/dist/worker.js",
                 onProgress: (p) => { 
                     const pct = Math.round(p * 100);
                     document.getElementById('bar').style.width = pct + "%"; 
-                    document.getElementById('status').innerText = "ĐANG TẢI: " + pct + "%";
+                    document.getElementById('status').innerText = "LOADING: " + pct + "%";
                 },
                 onReady: () => { document.getElementById('loading').style.display = 'none'; }
             };
 
             try {
                 const emu = new J2ME(document.getElementById('screen'), config);
-                // Nạp file JAR từ thư mục nội bộ games/
-                emu.loadJar(jarUrl).then(() => {
+                // Nếu file nằm trong repo, nạp trực tiếp qua URL tuyệt đối để tránh lỗi đường dẫn
+                const absoluteUrl = window.location.href.split('index.html')[0] + jarUrl;
+                
+                emu.loadJar(absoluteUrl).then(() => {
                     emu.start();
                 }).catch(e => {
-                    document.getElementById('status').innerText = "LỖI NẠP FILE JAR!";
+                    document.getElementById('status').innerText = "FILE JAR LỖI!";
                     document.getElementById('status').style.color = "red";
                 });
             } catch (err) {
-                document.getElementById('status').innerText = "MÁY ẢO KHÔNG HỖ TRỢ!";
+                document.getElementById('status').innerText = "LỖI KHỞI TẠO!";
             }
         }
     </script>
